@@ -1,0 +1,70 @@
+{
+  "name": "@atmina/use-dialog",
+  "version": "1.0.0-alpha.0",
+  "description": "A strongly-typed alternative API for React Hook Form.",
+  "source": "src/index.ts",
+  "main": "lib/index.js",
+  "module": "lib/index.module.js",
+  "unpkg": "lib/index.umd.js",
+  "types": "lib/index.d.ts",
+  "files": [
+    "/lib"
+  ],
+  "scripts": {
+    "build": "rimraf lib && microbundle --jsx React.createElement src/index.ts",
+    "prepublishOnly": "npm test && npm run build",
+    "lint": "yarn lint:eslint:fix && yarn prettier:fix",
+    "lint:eslint": "eslint .",
+    "lint:eslint:fix": "eslint . --fix",
+    "prettier:check": "prettier --check \"src/**/*.{tsx,graphql,ts,js,css}\"",
+    "prettier:fix": "prettier --write \"src/**/*.{tsx,graphql,ts,js,css}\"",
+    "test": "jest src"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/atmina/formbuilder.git"
+  },
+  "keywords": [
+    "react",
+    "hooks",
+    "forms",
+    "react-hook-form",
+    "typescript"
+  ],
+  "author": "ATMINA Solutions GmbH <info@atmina.de>",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/atmina/formbuilder/issues"
+  },
+  "homepage": "https://github.com/atmina/formbuilder#readme",
+  "devDependencies": {
+    "@testing-library/jest-dom": "^5.16.4",
+    "@testing-library/react": "^13.2.0",
+    "@testing-library/user-event": "^14.1.1",
+    "@types/jest": "^27.5.0",
+    "@types/react": "^18.0.8",
+    "@typescript-eslint/eslint-plugin": "^5.26.0",
+    "@typescript-eslint/parser": "^5.26.0",
+    "eslint": "^8.16.0",
+    "eslint-config-prettier": "^8.5.0",
+    "eslint-config-standard-with-typescript": "^21.0.1",
+    "eslint-plugin-import": "^2.26.0",
+    "eslint-plugin-node": "^11.1.0",
+    "eslint-plugin-prettier": "^4.0.0",
+    "eslint-plugin-promise": "^6.0.0",
+    "eslint-plugin-react": "^7.30.0",
+    "expect-type": "^0.13.0",
+    "jest": "^28.0.3",
+    "jest-environment-jsdom": "^28.0.2",
+    "microbundle": "^0.15.0",
+    "prettier": "^2.6.2",
+    "react": "^18.1.0",
+    "react-dom": "^18.1.0",
+    "react-hook-form": "^7.33.0",
+    "ts-jest": "^28.0.1",
+    "typescript": "^4.6.4"
+  },
+  "peerDependencies": {
+    "react-hook-form": "^7.33.0"
+  }
+}
