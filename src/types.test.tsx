@@ -1,5 +1,5 @@
 import { expectTypeOf } from "expect-type";
-import { FormBuilder } from "./formbuilder";
+import { FormBuilder, useFormBuilder } from "./formbuilder";
 
 describe("Types", () => {
   test("FormBuilder", () => {
@@ -58,9 +58,16 @@ describe("Types", () => {
     expectTypeOf<
       FormBuilder<{ foo: string }>["foo"]["$useWatch"]
     >().toBeFunction();
-    const useFooWatch: FormBuilder<{ foo: string }>["foo"]["$useWatch"] = (() =>
+    const useWatchFoo: FormBuilder<{ foo: string }>["foo"]["$useWatch"] = (() =>
       "foo") as never;
-    expectTypeOf(useFooWatch()).toEqualTypeOf<string>();
+    expectTypeOf(useWatchFoo()).toEqualTypeOf<string>();
+    // useWatch with array of watched subfields
+    const useWatchBar: FormBuilder<{
+      bar: { baz: string; quux: number };
+    }>["bar"]["$useWatch"] = (() => "bar") as never;
+    expectTypeOf(useWatchBar({ name: ["baz", "quux"] })).toEqualTypeOf<
+      [string, number]
+    >();
 
     // useController helper
     expectTypeOf<
@@ -81,7 +88,7 @@ describe("Types", () => {
       TFormBuilderWithArray["things"]["$useFieldArray"]
     >().toBeFunction();
     expectTypeOf<FormBuilder<{ foo: string }>>().not.toHaveProperty(
-      "useFieldArray"
+      "$useFieldArray"
     );
     expectTypeOf<
       FormBuilder<{ things: { foo: string }[]; otherThings: { bar: string }[] }>
@@ -96,8 +103,8 @@ describe("Types", () => {
     >();
 
     // Is this desirable? And can it be done in a way that doesn't involve reducing
-    // `FormBuilderRegister<any>` to `any`?
-    // expectTypeOf<FormBuilderRegister<any>>().toMatchTypeOf<{foo: string}>();
+    // `FormBuilder<any>` to `any`?
+    // expectTypeOf<FormBuilder<any>>().toMatchTypeOf<{foo: string}>();
 
     // Is this possible without breaking everything else?
     // expectTypeOf<FormBuilder<{foo: string}>>().toMatchTypeOf<{foo: string, exists?: boolean}>();

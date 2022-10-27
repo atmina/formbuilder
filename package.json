@@ -1,6 +1,6 @@
 {
-  "name": "@atmina/use-dialog",
-  "version": "1.0.0-alpha.0",
+  "name": "@atmina/formbuilder",
+  "version": "0.0.1",
   "description": "A strongly-typed alternative API for React Hook Form.",
   "source": "src/index.ts",
   "main": "lib/index.js",
@@ -57,7 +57,7 @@
     "jest": "^28.0.3",
     "jest-environment-jsdom": "^28.0.2",
     "microbundle": "^0.15.0",
-    "prettier": "^2.6.2",
+    "prettier": "^2.7.1",
     "react": "^18.1.0",
     "react-dom": "^18.1.0",
     "react-hook-form": "^7.33.0",

@@ -1,13 +1,13 @@
 import React, { FC, ReactNode } from "react";
 import { act, render, screen, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
-import {
-  SubmitHandler,
-  UnpackNestedValue,
-  UseFormProps,
-} from "react-hook-form";
+import { SubmitHandler } from "react-hook-form";
 
-import { useFormBuilder, UseFormBuilderReturn } from "./formbuilder";
+import {
+  useFormBuilder,
+  UseFormBuilderProps,
+  UseFormBuilderReturn,
+} from "./formbuilder";
 
 describe("useFormBuilder", () => {
   interface FormData {
@@ -16,13 +16,13 @@ describe("useFormBuilder", () => {
   }
 
   const createHarness = (
-    props?: UseFormProps<FormData>,
+    props: UseFormBuilderProps<FormData>,
     renderChild?: (builder: UseFormBuilderReturn<FormData>) => ReactNode
   ) => {
     const returnValue: {
       Form: typeof Form;
       formBuilder: UseFormBuilderReturn<FormData>;
-      values: UnpackNestedValue<FormData>;
+      values: FormData;
     } = {} as any;
 
     const Form: FC<{

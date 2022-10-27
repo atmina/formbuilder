@@ -1,35 +1,30 @@
 import {
+  BrowserNativeObject,
   ErrorOption,
+  FieldArrayPath,
   FieldPath,
-  FieldPathValue,
   FieldPathValues,
   FieldValues,
   InternalFieldName,
   Message,
   Primitive,
   SetFocusOptions,
-  useController,
   UseControllerProps,
   UseControllerReturn,
-  useFieldArray,
   UseFieldArrayReturn,
-  useForm,
   UseFormProps,
   UseFormRegisterReturn,
   UseFormReturn,
   UseFormSetError,
-  useWatch,
   UseWatchProps,
-  ValidationRule,
   ValidateResult,
-  FieldArrayPath,
+  ValidationRule,
+  useController,
+  useFieldArray,
+  useForm,
+  useWatch,
 } from "react-hook-form";
 import { useMemo } from "react";
-
-// Future considerations:
-// - improve the stack trace on FormBuilder<T> type mismatch
-//   (currently it is big and scary)
-// - figure out how to get FormBuilder<any> to work
 
 /**
  * Represents a field or collection of fields.
@@ -44,20 +39,17 @@ export type FormBuilder<T> = FormBuilderRegisterFn<T> & {
   // (See below for explanation)
   $useController<U = T>(
     props?: Omit<UseControllerProps, "name" | "control">
-  ): UseControllerReturn<{ __: U }, U extends Primitive ? "__" : "__">;
-  $useWatch<
-    TValues = T,
-    TFieldName extends FieldPath<TValues> = FieldPath<TValues>
-  >(
-    props?: FormBuilderUseWatchCommonProps & { name: TFieldName }
-  ): FieldPathValue<TValues, TFieldName>;
+  ): UseControllerReturn<
+    { __: U },
+    U extends Primitive | BrowserNativeObject ? "__" : "__"
+  >;
+  $useWatch<U = T>(props?: $UseWatchCommonProps): U;
   $useWatch<
     TValues = T,
     TFieldNames extends readonly FieldPath<TValues>[] = readonly FieldPath<TValues>[]
   >(
-    props?: FormBuilderUseWatchCommonProps & { name: readonly [...TFieldNames] }
+    props: $UseWatchCommonProps & { name: readonly [...TFieldNames] }
   ): FieldPathValues<TValues, TFieldNames>;
-  $useWatch<U = T>(props?: FormBuilderUseWatchCommonProps): U;
   $setValue(value: T): void;
   $setError(
     error: ErrorOption,
@@ -70,13 +62,9 @@ export type FormBuilder<T> = FormBuilderRegisterFn<T> & {
     : T extends Array<infer U>
     ? {
         [K: number]: FormBuilder<U>;
-        $useFieldArray<TItem = U, TKey extends string = "key">(
-          props?: FormBuilderUseFieldArrayProps<TKey>
-        ): UseFieldArrayReturn<
-          { __: TItem[] },
-          TItem extends Primitive ? never : "__",
-          TKey
-        >;
+        $useFieldArray<TItem = U>(
+          props?: $UseFieldArrayProps<U>
+        ): $UseFieldArrayReturn<TItem>;
       }
     : {
         [K in Exclude<keyof T, `${"__"}${string}`>]-?: FormBuilder<T[K]>;
@@ -157,10 +145,10 @@ export function createFormBuilder<TFieldValues>(
             useCached = () => currentPath;
             break;
           case "$useFieldArray":
-            useCached = (props?: FormBuilderUseFieldArrayProps) =>
+            useCached = (props?: $UseFieldArrayProps<never>) =>
               useFieldArray({
                 name: currentPath as FieldArrayPath<TFieldValues>,
-                keyName: "key",
+                keyName: "key" as const,
                 control,
                 ...props,
               });
@@ -219,14 +207,15 @@ const prependCurrentPath = (
   currentPath: string,
   name: undefined | string | string[]
 ): string | string[] => {
-  if (currentPath.length === 0) return name ?? "";
+  if (currentPath.length === 0) {
+    return name ?? "";
+  }
   if (typeof name === "string") {
     return `${currentPath}.${name}`;
   } else if (Array.isArray(name)) {
     return name.map((s) => `${currentPath}.${s}`);
-  } else {
-    return currentPath;
   }
+  return currentPath;
 };
 
 export interface UseFormBuilderReturn<
@@ -246,10 +235,7 @@ export interface UseFormBuilderReturn<
  * <input type='number' {...fields.foo.bar({min: ..., max: ...})} />
  *
  * // Field array (only available on array values, name is pre-filled)
- * const {fields, ...arrayMethods} = fields.things.useFieldArray({...});
- *
- * // Obtain the dotted path (e.g. for `setValue`)
- * const path = String(fields.foo.bar); // 'foo.bar'
+ * const {fields, ...arrayMethods} = fields.things.$useFieldArray({...});
  * ```
  * @param props additional props passed to `useForm()`
  * @see FormBuilder
@@ -258,9 +244,9 @@ export function useFormBuilder<
   TFieldValues extends FieldValues = FieldValues,
   TContext extends object = object
 >(
-  props?: UseFormProps<TFieldValues, TContext>
+  props: UseFormBuilderProps<TFieldValues, TContext>
 ): UseFormBuilderReturn<TFieldValues, TContext> {
-  const methods = useForm<TFieldValues, TContext>(props);
+  const methods = useForm<TFieldValues, TContext>(props as never);
   const fields = useMemo(
     () => createFormBuilder<TFieldValues>(methods, []),
     [methods.register, methods.control]
@@ -275,9 +261,6 @@ type Validate<T> = {
   bivarianceHack(value: T): ValidateResult;
 }["bivarianceHack"];
 
-// Copied straight from RHF and then simplified to not use the field path
-// resolution. This needs to be kept in sync with RHF, but hopefully reduces
-// load on the typechecker.
 type RegisterOptions<T> = Partial<{
   required: Message | ValidationRule<boolean>;
   min: ValidationRule<number | string>;
@@ -297,12 +280,24 @@ type RegisterOptions<T> = Partial<{
   deps: InternalFieldName[];
 }>;
 
-interface FormBuilderUseFieldArrayProps<TKey extends string = "key"> {
-  keyName?: TKey;
-  shouldUnregister?: boolean;
-}
-
-type FormBuilderUseWatchCommonProps = Omit<
+type $UseWatchCommonProps = Omit<
   UseWatchProps<never>,
   "name" | "control" | "defaultValue"
 >;
+
+type $UseFieldArrayProps<T> = {
+  rules?: {} & Pick<RegisterOptions<T>, "maxLength" | "minLength" | "required">;
+  shouldUnregister?: boolean;
+};
+
+type $UseFieldArrayReturn<T> = UseFieldArrayReturn<
+  { __: T[] },
+  T extends Primitive | BrowserNativeObject ? never : "__"
+>;
+
+export type UseFormBuilderProps<
+  TFieldValues = FieldValues,
+  TContext = any
+> = Omit<UseFormProps<TFieldValues, TContext>, "defaultValues"> & {
+  defaultValues: TFieldValues;
+};
