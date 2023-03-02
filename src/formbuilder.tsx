@@ -244,7 +244,7 @@ export function useFormBuilder<
   TFieldValues extends FieldValues = FieldValues,
   TContext extends object = object
 >(
-  props: UseFormBuilderProps<TFieldValues, TContext>
+  props?: UseFormBuilderProps<TFieldValues, TContext>
 ): UseFormBuilderReturn<TFieldValues, TContext> {
   const methods = useForm<TFieldValues, TContext>(props as never);
   const fields = useMemo(
