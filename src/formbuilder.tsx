@@ -45,7 +45,7 @@ export type FormBuilder<T> = FormBuilderRegisterFn<T> & {
   >;
   $useWatch<U = T>(props?: $UseWatchCommonProps): U;
   $useWatch<
-    TValues = T,
+    TValues extends FieldValues = T extends FieldValues ? T : FieldValues,
     TFieldNames extends readonly FieldPath<TValues>[] = readonly FieldPath<TValues>[]
   >(
     props: $UseWatchCommonProps & { name: readonly [...TFieldNames] }
@@ -59,7 +59,7 @@ export type FormBuilder<T> = FormBuilderRegisterFn<T> & {
 } & (T extends Primitive
     ? // Leaf node
       unknown
-    : T extends Array<infer U>
+    : T extends Array<infer U extends FieldValues>
     ? {
         [K: number]: FormBuilder<U>;
         $useFieldArray<TItem = U>(
@@ -116,7 +116,7 @@ type FormBuilderRegisterFn<T> = {
   String(fields.foo.bar) == 'foo.bar'
   ```
 */
-export function createFormBuilder<TFieldValues>(
+export function createFormBuilder<TFieldValues extends FieldValues>(
   methods: UseFormReturn<TFieldValues>,
   path: string[]
 ): FormBuilder<TFieldValues> {
@@ -157,7 +157,7 @@ export function createFormBuilder<TFieldValues>(
             useCached = (
               props?: Omit<UseControllerProps, "name" | "control">
             ) =>
-              useController({
+              useController<TFieldValues>({
                 name: currentPath,
                 control,
                 ...props,
@@ -219,7 +219,7 @@ const prependCurrentPath = (
 };
 
 export interface UseFormBuilderReturn<
-  TFieldValues,
+  TFieldValues extends FieldValues,
   TContext extends object = object
 > extends UseFormReturn<TFieldValues, TContext> {
   fields: FormBuilder<TFieldValues>;
@@ -296,7 +296,7 @@ type $UseFieldArrayReturn<T> = UseFieldArrayReturn<
 >;
 
 export type UseFormBuilderProps<
-  TFieldValues = FieldValues,
+  TFieldValues extends FieldValues = FieldValues,
   TContext = any
 > = Omit<UseFormProps<TFieldValues, TContext>, "defaultValues"> & {
   defaultValues: TFieldValues;
