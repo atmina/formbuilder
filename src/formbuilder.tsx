@@ -299,10 +299,10 @@ type $UseWatchCommonProps = Omit<
   "name" | "control" | "defaultValue"
 >;
 
-type $UseFieldArrayProps<T> = {
+interface $UseFieldArrayProps<T> {
   rules?: {} & Pick<RegisterOptions<T>, "maxLength" | "minLength" | "required">;
   shouldUnregister?: boolean;
-};
+}
 
 type $UseFieldArrayReturn<T> = UseFieldArrayReturn<
   { __: T[] },
