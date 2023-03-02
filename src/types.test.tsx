@@ -1,5 +1,5 @@
 import { expectTypeOf } from "expect-type";
-import { FormBuilder, useFormBuilder } from "./formbuilder";
+import { FormBuilder } from "./formbuilder";
 
 describe("Types", () => {
   test("FormBuilder", () => {
