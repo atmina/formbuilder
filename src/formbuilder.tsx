@@ -261,24 +261,38 @@ type Validate<T> = {
   bivarianceHack(value: T): ValidateResult;
 }["bivarianceHack"];
 
-type RegisterOptions<T> = Partial<{
+export type RegisterOptions<T> = Partial<{
   required: Message | ValidationRule<boolean>;
   min: ValidationRule<number | string>;
   max: ValidationRule<number | string>;
   maxLength: ValidationRule<number>;
   minLength: ValidationRule<number>;
-  pattern: ValidationRule<RegExp>;
   validate: Validate<T> | Record<string, Validate<T>>;
-  valueAsNumber: boolean;
-  valueAsDate: boolean;
   value: T;
   setValueAs: (value: unknown) => T;
   shouldUnregister?: boolean;
   onChange?: (event: Event) => void;
   onBlur?: (event: Event) => void;
   disabled: boolean;
-  deps: InternalFieldName[];
-}>;
+  deps: InternalFieldName | InternalFieldName[];
+}> &
+  (
+    | {
+        pattern?: ValidationRule<RegExp>;
+        valueAsNumber?: false;
+        valueAsDate?: false;
+      }
+    | {
+        pattern?: undefined;
+        valueAsNumber?: false;
+        valueAsDate?: true;
+      }
+    | {
+        pattern?: undefined;
+        valueAsNumber?: true;
+        valueAsDate?: false;
+      }
+  );
 
 type $UseWatchCommonProps = Omit<
   UseWatchProps<never>,
