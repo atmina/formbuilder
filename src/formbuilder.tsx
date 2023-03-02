@@ -312,6 +312,4 @@ type $UseFieldArrayReturn<T> = UseFieldArrayReturn<
 export type UseFormBuilderProps<
   TFieldValues extends FieldValues = FieldValues,
   TContext = any
-> = Omit<UseFormProps<TFieldValues, TContext>, "defaultValues"> & {
-  defaultValues: TFieldValues;
-};
+> = UseFormProps<TFieldValues, TContext>;
