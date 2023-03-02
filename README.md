@@ -1,7 +1,15 @@
 # FormBuilder
 
-Write composable and type-safe form components at the subform and field level. Powered by
+Write composable and type-safe form components, including subforms and field level components. Powered by
 [React Hook Form](https://react-hook-form.com/).
+
+## Installation
+
+```shell
+npm install @atmina/formbuilder
+# or
+yarn add @atmina/formbuilder
+```
 
 ## Usage
 
@@ -11,13 +19,6 @@ Form. Each field in the form data can be accessed as a property, including neste
 function to [register](https://react-hook-form.com/api/useform/register/) an input. It also exposes RHF functions via 
 field-level methods, e.g. `$setValue`. These methods are prefixed with `$` to prevent potential conflicts with form
 data members.
-
-## Compatibility with `useForm`
-
-Currently, `useFormBuilder` is almost compatible with `useForm`. This means you get the entire bag of tools provided by
-`useForm`, in addition to the `fields` API. This provides an escape hatch for use cases not yet covered by
-`useFormBuilder`. However, future versions of the library may see us diverging further from `useForm` in an effort to
-streamline this API and increase its type-safety.
 
 ```tsx
 import { useFormBuilder } from '@atmina/formbuilder';
@@ -51,12 +52,12 @@ const App = () => {
 ## Fields
 
 You can create components that encapsulate a single (typed) field by accepting a `FormBuilder<T>` prop  where `T` is
-the type of the field. We like to call this `on`, but you are free to name it however you like.
+the type of the field. We like to call this `on` or `field`, but you are free to name it however you like.
 
 ```tsx
 import { FC } from "react";
 
-const TextField: FC<{on: FormBuilder<string>, label: string}> = ({field}) => {
+const TextField: FC<{on: FormBuilder<string>, label: string}> = ({on: field}) => {
     return <div>
         <label>
             <span>{label}</span>
@@ -95,6 +96,14 @@ const AddressSubform: FC<{field: FormBuilder<Address>}> = ({field}) => {
     </div>
 }
 ```
+
+## Compatibility with `useForm`
+
+Currently, `useFormBuilder` is almost compatible with `useForm`. This means you get the entire bag of tools provided by
+`useForm`, in addition to the `fields` API. This provides an escape hatch for use cases not yet covered by
+`useFormBuilder`. However, future versions of the library may see us diverging further from `useForm` in an effort to
+streamline this API and increase its type-safety.
+
 
 ## License
 
