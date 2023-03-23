@@ -24,7 +24,7 @@ import {
   useForm,
   useWatch,
 } from "react-hook-form";
-import { useMemo } from "react";
+import { useRef } from "react";
 
 /**
  * Represents a field or collection of fields.
@@ -247,12 +247,18 @@ export function useFormBuilder<
   props?: UseFormBuilderProps<TFieldValues, TContext>
 ): UseFormBuilderReturn<TFieldValues, TContext> {
   const methods = useForm<TFieldValues, TContext>(props as never);
-  const fields = useMemo(
-    () => createFormBuilder<TFieldValues>(methods, []),
-    [methods.register, methods.control]
-  );
+  const formBuilderReturnRef = useRef<UseFormBuilderReturn<TFieldValues, TContext> | null>(null);
 
-  return { fields, ...methods };
+  let formBuilderReturn = formBuilderReturnRef.current;
+  if (formBuilderReturn === null) {
+    formBuilderReturn = {
+      fields: createFormBuilder<TFieldValues>(methods, []),
+      ...methods,
+    };
+    formBuilderReturnRef.current = formBuilderReturn;
+  }
+
+  return formBuilderReturn;
 }
 
 // Validate is another source of contravariance.
