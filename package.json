@@ -1,6 +1,6 @@
 {
   "name": "@atmina/formbuilder",
-  "version": "0.0.4",
+  "version": "0.0.5",
   "description": "A strongly-typed alternative API for React Hook Form.",
   "source": "src/index.ts",
   "main": "lib/index.js",
