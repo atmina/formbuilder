@@ -247,18 +247,8 @@ export function useFormBuilder<
   props?: UseFormBuilderProps<TFieldValues, TContext>
 ): UseFormBuilderReturn<TFieldValues, TContext> {
   const methods = useForm<TFieldValues, TContext>(props as never);
-  const formBuilderReturnRef = useRef<UseFormBuilderReturn<TFieldValues, TContext> | null>(null);
-
-  let formBuilderReturn = formBuilderReturnRef.current;
-  if (formBuilderReturn === null) {
-    formBuilderReturn = {
-      fields: createFormBuilder<TFieldValues>(methods, []),
-      ...methods,
-    };
-    formBuilderReturnRef.current = formBuilderReturn;
-  }
-
-  return formBuilderReturn;
+  const formBuilderReturnRef = useRef<UseFormBuilderReturn<TFieldValues, TContext>>(methods);
+  return Object.assign(formBuilderReturnRef.current, methods);
 }
 
 // Validate is another source of contravariance.
