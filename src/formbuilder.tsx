@@ -253,7 +253,7 @@ export function useFormBuilder<
     [methods.register, methods.control]
   );
 
-  const formBuilderReturnRef = useRef<UseFormBuilderReturn<TFieldValues, TContext>>(methods);
+  const formBuilderReturnRef = useRef<UseFormReturn<TFieldValues, TContext>>(methods);
 
   return Object.assign(formBuilderReturnRef.current, { fields, ...methods });
 }
