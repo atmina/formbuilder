@@ -149,4 +149,33 @@ describe("useFormBuilder", () => {
       expect(watchedFirstNameAlt).toHaveTextContent("Joe");
     });
   });
+
+  test("formState", async () => {
+    const harness = createHarness({ defaultValues }, (builder) => {
+      const isDirty = builder.formState.isDirty;
+
+      return (
+        <div data-testid="form-state-is-dirty">
+          {isDirty ? "true" : "false"}
+        </div>
+      );
+    });
+
+    render(<harness.Form />);
+
+    const firstNameInput = screen.getByLabelText("first-name-input");
+
+    const formStateIsDirty = screen.getByTestId("form-state-is-dirty");
+
+    expect(formStateIsDirty).toHaveTextContent("false");
+
+    await act(async () => {
+      await userEvent.clear(firstNameInput);
+      await userEvent.type(firstNameInput, "Joe");
+    });
+
+    await waitFor(() => {
+      expect(formStateIsDirty).toHaveTextContent("true");
+    });
+  });
 });
