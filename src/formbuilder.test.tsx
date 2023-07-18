@@ -11,8 +11,10 @@ import {
 
 describe("useFormBuilder", () => {
   interface FormData {
-    firstName: string;
-    lastName: string;
+    person: {
+      firstName: string;
+      lastName: string;
+    };
   }
 
   const createHarness = (
@@ -33,8 +35,14 @@ describe("useFormBuilder", () => {
       returnValue.values = watch();
       return (
         <form onSubmit={onSubmit != null ? handleSubmit(onSubmit) : undefined}>
-          <input {...fields.firstName()} aria-label="first-name-input" />
-          <input {...fields.lastName()} aria-label="last-name-input" />
+          <input
+            {...fields.person.firstName({ required: true })}
+            aria-label="first-name-input"
+          />
+          <input
+            {...fields.person.lastName({ required: true })}
+            aria-label="last-name-input"
+          />
           <button type="submit">Submit</button>
           {renderChild != null ? renderChild(returnValue.formBuilder) : null}
         </form>
@@ -47,8 +55,10 @@ describe("useFormBuilder", () => {
   };
 
   const defaultValues: FormData = {
-    firstName: "John",
-    lastName: "Smith",
+    person: {
+      firstName: "John",
+      lastName: "Smith",
+    },
   };
 
   beforeAll(() => {
@@ -89,8 +99,8 @@ describe("useFormBuilder", () => {
     });
 
     // Submitted data contains new values
-    expect(formData.firstName).toBe("Joe");
-    expect(formData.lastName).toBe("Bloggs");
+    expect(formData.person.firstName).toBe("Joe");
+    expect(formData.person.lastName).toBe("Bloggs");
   });
 
   test("$setValue", async () => {
@@ -99,10 +109,10 @@ describe("useFormBuilder", () => {
     render(<harness.Form />);
 
     act(() => {
-      harness.formBuilder.fields.firstName.$setValue("Joe");
+      harness.formBuilder.fields.person.firstName.$setValue("Joe");
     });
 
-    expect(harness.values.firstName).toBe("Joe");
+    expect(harness.values.person.firstName).toBe("Joe");
   });
 
   test("$useWatch", async () => {
@@ -110,11 +120,11 @@ describe("useFormBuilder", () => {
       // Option 1: get everything
       const root = builder.fields.$useWatch();
       // Option 2: get subset of fields
-      const [firstName, lastName] = builder.fields.$useWatch({
+      const [firstName, lastName] = builder.fields.person.$useWatch({
         name: ["firstName", "lastName"],
       });
       // Option 3: get specific field
-      const firstNameAlt = builder.fields.firstName.$useWatch();
+      const firstNameAlt = builder.fields.person.firstName.$useWatch();
       return (
         <>
           <div data-testid="watched-root">{JSON.stringify(root)}</div>
@@ -125,7 +135,7 @@ describe("useFormBuilder", () => {
       );
     });
 
-    render(<harness.Form />);
+    render(<harness.Form onSubmit={() => {}} />);
 
     const firstNameInput = screen.getByLabelText("first-name-input");
 
@@ -141,7 +151,7 @@ describe("useFormBuilder", () => {
 
     await waitFor(() => {
       expect(watchedRoot).toHaveTextContent(
-        JSON.stringify({ firstName: "Joe", lastName: "Smith" })
+        JSON.stringify({ person: { firstName: "Joe", lastName: "Smith" } })
       );
       expect(watchedRoot).toHaveTextContent("Smith");
       expect(watchedFirstName).toHaveTextContent("Joe");
@@ -176,6 +186,36 @@ describe("useFormBuilder", () => {
 
     await waitFor(() => {
       expect(formStateIsDirty).toHaveTextContent("true");
+    });
+  });
+
+  test("$useState", async () => {
+    const handleSubmit: SubmitHandler<FormData> = (data) => {};
+
+    const harness = createHarness({ defaultValues }, (builder) => {
+      const { dirty, errors } = builder.fields.person.firstName.$useState();
+      return (
+        <div>
+          <div data-testid="is-dirty">{JSON.stringify(dirty)}</div>
+          <div data-testid="error-type">{errors?.type}</div>
+        </div>
+      );
+    });
+
+    render(<harness.Form onSubmit={handleSubmit} />);
+
+    const firstNameInput = screen.getByLabelText("first-name-input");
+    const isDirty = screen.getByTestId("is-dirty");
+    const errorType = screen.getByTestId("error-type");
+
+    await act(async () => {
+      await userEvent.clear(firstNameInput);
+      screen.getByRole("button").click();
+    });
+
+    await waitFor(() => {
+      expect(isDirty).toHaveTextContent("true");
+      expect(errorType).toHaveTextContent("required");
     });
   });
 });

@@ -2,9 +2,12 @@ import {
   BrowserNativeObject,
   ErrorOption,
   FieldArrayPath,
+  FieldErrors,
+  FieldNamesMarkedBoolean,
   FieldPath,
   FieldPathValues,
   FieldValues,
+  GlobalError,
   InternalFieldName,
   Message,
   Primitive,
@@ -16,11 +19,14 @@ import {
   UseFormRegisterReturn,
   UseFormReturn,
   UseFormSetError,
+  UseFormStateProps,
   UseWatchProps,
   ValidateResult,
   ValidationRule,
+  get,
   useController,
   useFieldArray,
+  useFormState,
   useForm,
   useWatch,
 } from "react-hook-form";
@@ -50,6 +56,14 @@ export type FormBuilder<T> = FormBuilderRegisterFn<T> & {
   >(
     props: $UseWatchCommonProps & { name: readonly [...TFieldNames] }
   ): FieldPathValues<TValues, TFieldNames>;
+  $useState<U = T>(
+    props?: $UseStateProps
+  ): U extends FieldValues
+    ? {
+        errors: FieldErrors<U>;
+        dirty: Partial<Readonly<FieldNamesMarkedBoolean<U>>>;
+      }
+    : { errors: GlobalError; dirty: boolean };
   $setValue(value: T): void;
   $setError(
     error: ErrorOption,
@@ -134,7 +148,7 @@ export function createFormBuilder<TFieldValues extends FieldValues>(
       return methods.register(currentPath, options as never);
     }) as FormBuilder<TFieldValues>,
     {
-      get(target, prop) {
+      get(_, prop) {
         let useCached = cache[prop];
         if (useCached !== undefined) {
           return useCached;
@@ -175,6 +189,15 @@ export function createFormBuilder<TFieldValues extends FieldValues>(
                 control,
                 ...rest,
               });
+            };
+            break;
+          case "$useState":
+            useCached = (props?: $UseStateProps) => {
+              const { errors: rootErrors, dirtyFields: rootDirtyFields } =
+                useFormState({ ...props, control, name: currentPath });
+              const errors = get(rootErrors, currentPath);
+              const dirty = get(rootDirtyFields, currentPath);
+              return { errors, dirty };
             };
             break;
           case "$setValue":
@@ -298,6 +321,8 @@ type $UseWatchCommonProps = Omit<
   UseWatchProps<never>,
   "name" | "control" | "defaultValue"
 >;
+
+type $UseStateProps = Omit<UseFormStateProps<never>, "name" | "control">;
 
 interface $UseFieldArrayProps<T> {
   rules?: {} & Pick<RegisterOptions<T>, "maxLength" | "minLength" | "required">;
