@@ -194,7 +194,7 @@ export function createFormBuilder<TFieldValues extends FieldValues>(
           case "$useState":
             useCached = (props?: $UseStateProps) => {
               const { errors: rootErrors, dirtyFields: rootDirtyFields } =
-                useFormState({ ...props, control });
+                useFormState({ ...props, control, name: currentPath });
               const errors = get(rootErrors, currentPath);
               const dirty = get(rootDirtyFields, currentPath);
               return { errors, dirty };
