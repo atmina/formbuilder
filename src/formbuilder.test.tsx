@@ -210,9 +210,6 @@ describe("useFormBuilder", () => {
 
     await act(async () => {
       await userEvent.clear(firstNameInput);
-    });
-
-    await act(async () => {
       screen.getByRole("button").click();
     });
 
