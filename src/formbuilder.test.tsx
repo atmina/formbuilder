@@ -15,6 +15,10 @@ describe("useFormBuilder", () => {
       firstName: string;
       lastName: string;
     };
+    list: {
+      id: string;
+      action: string;
+    }[];
   }
 
   const createHarness = (
@@ -59,6 +63,10 @@ describe("useFormBuilder", () => {
       firstName: "John",
       lastName: "Smith",
     },
+    list: [
+      { id: "0", action: "frobnicate" },
+      { id: "1", action: "skedaddle" },
+    ]
   };
 
   beforeAll(() => {
@@ -151,7 +159,7 @@ describe("useFormBuilder", () => {
 
     await waitFor(() => {
       expect(watchedRoot).toHaveTextContent(
-        JSON.stringify({ person: { firstName: "Joe", lastName: "Smith" } })
+        JSON.stringify({...defaultValues, person: {...defaultValues.person, firstName: "Joe"}})
       );
       expect(watchedRoot).toHaveTextContent("Smith");
       expect(watchedFirstName).toHaveTextContent("Joe");
@@ -218,4 +226,29 @@ describe("useFormBuilder", () => {
       expect(errorType).toHaveTextContent("required");
     });
   });
+
+  test("$useFieldArray", async () => {
+    const harness = createHarness({ defaultValues }, (builder) => {
+      const { fields } = builder.fields.list.$useFieldArray();
+
+      return <div>
+        {
+          fields.map((field, i) => (
+            <input
+              key={field.$key}
+              {...field.action()}
+              aria-label={`action-${i}`}
+            />
+          ))
+        }
+      </div>
+    });
+
+    render(<harness.Form />);
+
+    await waitFor(() => {
+      expect(screen.getByLabelText("action-0")).toHaveValue("frobnicate");
+      expect(screen.getByLabelText("action-1")).toHaveValue("skedaddle");
+    });
+  })
 });
