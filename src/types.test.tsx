@@ -59,7 +59,7 @@ describe("Types", () => {
       foo: { bar: { baz: string | null } | null } | null;
     }>;
     expectTypeOf<NestedNull["foo"]["bar"]["baz"]>().toMatchTypeOf<
-      FormBuilder<string>
+      FormBuilder<string | null>
     >();
 
     // Undefined
