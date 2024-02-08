@@ -81,7 +81,9 @@ export type FormBuilder<T> = FormBuilderRegisterFn<T> & {
         ): $UseFieldArrayReturn<TItem>;
       }
     : {
-        [K in Exclude<keyof T, `${"__"}${string}`>]-?: FormBuilder<T[K]>;
+        [K in Exclude<keyof T, `${"__"}${string}`>]-?: FormBuilder<
+          T[K] extends Primitive ? T[K] : NonNullable<T[K]>
+        >;
       });
 
 /*

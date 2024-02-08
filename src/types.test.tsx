@@ -38,12 +38,28 @@ describe("Types", () => {
       FormBuilder<{ foo?: string }>
     >();
 
+    // Nested optional
+    type NestedOptional = FormBuilder<{
+      foo?: { bar?: { baz?: string } };
+    }>;
+    expectTypeOf<NestedOptional["foo"]["bar"]["baz"]>().toMatchTypeOf<
+      FormBuilder<string>
+    >();
+
     // Nullable
     expectTypeOf<FormBuilder<string | null>>().toMatchTypeOf<
       FormBuilder<string>
     >();
     expectTypeOf<FormBuilder<string>>().toMatchTypeOf<
       FormBuilder<string | null>
+    >();
+
+    // Nested nullable
+    type NestedNull = FormBuilder<{
+      foo: { bar: { baz: string | null } | null } | null;
+    }>;
+    expectTypeOf<NestedNull["foo"]["bar"]["baz"]>().toMatchTypeOf<
+      FormBuilder<string>
     >();
 
     // Undefined
