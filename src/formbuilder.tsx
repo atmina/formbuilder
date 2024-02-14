@@ -134,7 +134,9 @@ type FormBuilderRegisterFn<T> = {
 */
 export function createFormBuilder<TFieldValues extends FieldValues>(
   methods: UseFormReturn<TFieldValues>,
-  path: string[]
+  path: string[],
+  // Set if created in $useFieldArray()
+  key?: string,
 ): FormBuilder<TFieldValues> {
   const currentPath = path.join(".") as FieldPath<TFieldValues>;
   // Cache generated functions to stabilize references across re-renders.
@@ -160,14 +162,23 @@ export function createFormBuilder<TFieldValues extends FieldValues>(
             // Called when used with `String(...)`.
             useCached = () => currentPath;
             break;
+          case "$key":
+            return key ?? currentPath;
           case "$useFieldArray":
-            useCached = (props?: $UseFieldArrayProps<never>) =>
-              useFieldArray({
+            useCached = (props?: $UseFieldArrayProps<never>) => {
+              const { fields, ...rest } = useFieldArray({
                 name: currentPath as FieldArrayPath<TFieldValues>,
-                keyName: "key" as const,
+                keyName: "$key" as const,
                 control,
                 ...props,
               });
+              return {
+                fields: fields.map(
+                  ({ $key }, i) => createFormBuilder(methods, [...path, i.toString()], $key)
+                ),
+                ...rest
+              };
+            }
             break;
           case "$useController":
             useCached = (
@@ -331,10 +342,12 @@ interface $UseFieldArrayProps<T> {
   shouldUnregister?: boolean;
 }
 
-type $UseFieldArrayReturn<T> = UseFieldArrayReturn<
+type $UseFieldArrayReturn<T> = Omit<UseFieldArrayReturn<
   { __: T[] },
   T extends Primitive | BrowserNativeObject ? never : "__"
->;
+>, "fields"> & {
+  fields: (FormBuilder<T> & {$key: string})[];
+};
 
 export type UseFormBuilderProps<
   TFieldValues extends FieldValues = FieldValues,
