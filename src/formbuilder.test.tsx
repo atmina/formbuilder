@@ -66,7 +66,7 @@ describe("useFormBuilder", () => {
     list: [
       { id: "0", action: "frobnicate" },
       { id: "1", action: "skedaddle" },
-    ]
+    ],
   };
 
   beforeAll(() => {
@@ -159,7 +159,10 @@ describe("useFormBuilder", () => {
 
     await waitFor(() => {
       expect(watchedRoot).toHaveTextContent(
-        JSON.stringify({...defaultValues, person: {...defaultValues.person, firstName: "Joe"}})
+        JSON.stringify({
+          ...defaultValues,
+          person: { ...defaultValues.person, firstName: "Joe" },
+        })
       );
       expect(watchedRoot).toHaveTextContent("Smith");
       expect(watchedFirstName).toHaveTextContent("Joe");
@@ -231,17 +234,17 @@ describe("useFormBuilder", () => {
     const harness = createHarness({ defaultValues }, (builder) => {
       const { fields } = builder.fields.list.$useFieldArray();
 
-      return <div>
-        {
-          fields.map((field, i) => (
+      return (
+        <div>
+          {fields.map((field, i) => (
             <input
               key={field.$key}
               {...field.action()}
               aria-label={`action-${i}`}
             />
-          ))
-        }
-      </div>
+          ))}
+        </div>
+      );
     });
 
     render(<harness.Form />);
@@ -250,5 +253,5 @@ describe("useFormBuilder", () => {
       expect(screen.getByLabelText("action-0")).toHaveValue("frobnicate");
       expect(screen.getByLabelText("action-1")).toHaveValue("skedaddle");
     });
-  })
+  });
 });

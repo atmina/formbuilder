@@ -97,6 +97,36 @@ const AddressSubform: FC<{field: FormBuilder<Address>}> = ({field}) => {
 }
 ```
 
+## Field arrays
+
+Fields which are typed as arrays provide a `$useFieldArray()` hook which can be used to map over the contents, as well
+as mutate them using operations such as `append`, `insert`, `move` and `remove`.
+
+The `fields` returned by `$useFieldArray` are themselves `FormBuilder`s that can be registered on inputs or passed to
+other Subform components.
+
+```tsx
+import { FC } from "react";
+
+const AddressesSubform: FC<{field: FormBuilder<Person[]>}> = ({field}) => {
+    const {fields, append} = field.$useFieldArray();
+    const add = () => {
+        append({state: '', city: '', /* etc. */});
+    }
+    return <div>
+        {fields.map(f => <AddressSubForm key={f.$key} field={f} />)}
+        <button onClick={add}>Add new address</button>
+    <div>
+}
+```
+
+The `$key` contains a unique id for the array item and must be passed as the `key` when [rendering the list](https://react.dev/learn/rendering-lists).
+
+Note: Field arrays are intended for use with arrays of objects. When dealing with arrays of primitives, you can either
+wrap the primitive in an object, or use a controller (`$useController`) to implement your own array logic.
+
+For more information, see the React Hook Form docs on [`useFieldArray`](https://react-hook-form.com/docs/usefieldarray).
+
 ## Compatibility with `useForm`
 
 Currently, `useFormBuilder` is almost compatible with `useForm`. This means you get the entire bag of tools provided by
