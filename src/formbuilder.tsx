@@ -70,6 +70,12 @@ export type FormBuilder<T> = FormBuilderRegisterFn<T> & {
     options: Parameters<UseFormSetError<FieldValues>>[2]
   ): void;
   $setFocus(options: SetFocusOptions): void;
+  $discriminate<TKey extends keyof T, TValue extends T[TKey]>(
+    key: TKey,
+    value: TValue
+  ): IsUnknown<T> extends 1
+    ? FormBuilder<unknown>
+    : FormBuilder<Extract<T, Record<TKey, TValue>>>;
 } & (T extends Primitive
     ? // Leaf node
       unknown
@@ -152,7 +158,7 @@ export function createFormBuilder<TFieldValues extends FieldValues>(
       return methods.register(currentPath, options as never);
     }) as FormBuilder<TFieldValues>,
     {
-      get(_, prop) {
+      get(_, prop, receiver) {
         let useCached = cache[prop];
         if (useCached !== undefined) {
           return useCached;
@@ -224,6 +230,9 @@ export function createFormBuilder<TFieldValues extends FieldValues>(
             useCached = (value, options: any) => {
               methods.setError(currentPath, value, options);
             };
+            break;
+          case "$discriminate":
+            useCached = () => receiver;
             break;
           default:
             // Recurse
@@ -353,3 +362,5 @@ export type UseFormBuilderProps<
   TFieldValues extends FieldValues = FieldValues,
   TContext = any
 > = UseFormProps<TFieldValues, TContext>;
+
+type IsUnknown<T> = unknown extends T ? (T extends unknown ? 1 : 0) : 0;
