@@ -127,6 +127,28 @@ wrap the primitive in an object, or use a controller (`$useController`) to imple
 
 For more information, see the React Hook Form docs on [`useFieldArray`](https://react-hook-form.com/docs/usefieldarray).
 
+## Discriminating unions
+
+In case of a form that contains fields with object unions, the `$discriminate()` function may be used to narrow the type
+using a specific member like this:
+
+```tsx
+import { FC } from 'react';
+
+type DiscriminatedForm = 
+    | { __typename: 'foo'; foo: string; }
+    | { __typename: 'bar'; bar: number; }
+
+const DiscriminatedSubform: FC<{field: FormBuilder<DiscriminatedForm>}> = ({field}) => {
+    const fooForm = field.$discriminate('__typename', 'foo');
+    
+    return <input {...fooForm.foo()} />;
+};
+```
+
+> [!IMPORTANT]
+> `$discriminate` currently does **not** perform any runtime checks, it's strictly used for type narrowing at this time.
+
 ## Compatibility with `useForm`
 
 Currently, `useFormBuilder` is almost compatible with `useForm`. This means you get the entire bag of tools provided by

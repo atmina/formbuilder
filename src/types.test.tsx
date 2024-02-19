@@ -110,6 +110,25 @@ describe("Types", () => {
       FormBuilder<{ things: { foo: string }[]; otherThings: { bar: string }[] }>
     >().toMatchTypeOf<FormBuilder<{ things: { foo: string }[] }>>();
 
+    // discriminate helper
+    interface FooForm {
+      __typename: "foo";
+      foo: string;
+    }
+    interface BarForm {
+      __typename: "bar";
+      bar: number;
+    }
+    const discriminatorForm: FormBuilder<FooForm | BarForm> = {
+      $discriminate: () => undefined,
+    } as any;
+    expectTypeOf(
+      discriminatorForm.$discriminate("__typename", "foo")
+    ).toMatchTypeOf<FormBuilder<{ foo: string }>>();
+    expectTypeOf(
+      discriminatorForm.$discriminate("__typename", "bar")
+    ).toMatchTypeOf<FormBuilder<{ bar: number }>>();
+
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     expectTypeOf<FormBuilder<{ foo: string }>>().toMatchTypeOf<
       FormBuilder<any>
