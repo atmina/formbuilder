@@ -219,6 +219,72 @@ describe("useFormBuilder", () => {
       expect(screen.getByLabelText("action-1")).toHaveValue("skedaddle");
     });
   });
+
+  test("$discriminate", () => {
+    enum Type {
+      Company = "COMPANY",
+      Person = "PERSON",
+    }
+
+    const harness = createHarness<
+      | ({ typename: Type.Person } & PersonData)
+      | { typename: Type.Company; companyName: string }
+    >(
+      {
+        defaultValues: {
+          typename: Type.Person,
+          ...person,
+        },
+      },
+      (fields) => {
+        const [typename, narrowed] = fields.$discriminate("typename");
+        switch (typename) {
+          case Type.Person:
+            return (
+              <>
+                <div>Person</div>
+                {renderPersonFields(narrowed)}
+              </>
+            );
+          case Type.Company:
+            return (
+              <>
+                <div>Company</div>
+                <input
+                  {...narrowed.companyName({ required: true })}
+                  aria-label="company-name-input"
+                />
+              </>
+            );
+        }
+      }
+    );
+
+    render(<harness.Form />);
+
+    expect(screen.getByText("Person"));
+
+    act(() => {
+      // $setValue doesn't work here because `typename` is typed as
+      //    `FormBuilder<Type.Person> | FormBuilder<Type.Company>`
+      // rather than
+      //    `FormBuilder<Type>`
+      // so the parameter presumably expects the intersection of Type.Person & Type.Company, which resolves to `never`.
+
+      // Note: this particular behavior only affects the discriminator in our union type, i.e.
+      // `{typename: Type.Person} | {typename: Type.Company}`, and not fields which are themselves typed as unions like
+      // `Type.Person | Type.Company`.
+
+      // @ts-expect-error (type error)
+      harness.builder.fields.typename.$setValue("company");
+
+      // RHF's use of typed paths circumvents this problem, because it enumerates *all* possible fields and infers the
+      // type based on that.
+      harness.builder.setValue("typename", Type.Company);
+    });
+
+    expect(screen.getByText("Company"));
+  });
 });
 
 interface PersonData {
