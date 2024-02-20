@@ -137,7 +137,7 @@ wrap the primitive in an object, or use a controller (`$useController`) to imple
 
 For more information, see the React Hook Form docs on [`useFieldArray`](https://react-hook-form.com/docs/usefieldarray).
 
-## Discriminating unions
+## Discriminated unions
 
 In case of a form that contains fields with object unions, the `$discriminate()` function may be used to narrow the type
 using a specific member like this:
@@ -152,13 +152,19 @@ type DiscriminatedForm =
 const DiscriminatedSubform: FC<{field: FormBuilder<DiscriminatedForm>}> = ({
     field,
 }) => {
-    const fooForm = field.$discriminate('__typename', 'foo');
+    const [typename, narrowed] = field.$discriminate('__typename');
 
-    return <input {...fooForm.foo()} />;
+    switch (typename) {
+      case 'foo':
+        return <input {...narrowed.foo()} />;
+      case 'bar':
+        // ...
+    }
 };
 ```
 
-> [!IMPORTANT] > `$discriminate` currently does **not** perform any runtime checks, it's strictly used for type narrowing at this time.
+This returns the current value of the discriminator as well as a `FormBuilder` that is automatically narrowed when
+the discriminator is checked, for example in a `switch` or `if` block.
 
 ## Compatibility with `useForm`
 
