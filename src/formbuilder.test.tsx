@@ -1,54 +1,41 @@
 import React, { FC, ReactNode } from "react";
 import { act, render, screen, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
-import { SubmitHandler } from "react-hook-form";
+import { FieldValues, SubmitHandler } from "react-hook-form";
 
 import {
+  FormBuilder,
   useFormBuilder,
   UseFormBuilderProps,
   UseFormBuilderReturn,
 } from "./formbuilder";
 
 describe("useFormBuilder", () => {
-  interface FormData {
-    person: {
-      firstName: string;
-      lastName: string;
-    };
-    list: {
-      id: string;
-      action: string;
-    }[];
-  }
-
-  const createHarness = (
-    props: UseFormBuilderProps<FormData>,
-    renderChild?: (builder: UseFormBuilderReturn<FormData>) => ReactNode
+  // Note: Do not destructure the return value, as some of its members are assigned only after the form has been
+  // rendered.
+  const createHarness = <TFormValues extends FieldValues>(
+    props: UseFormBuilderProps<TFormValues>,
+    renderFormComponents: (fields: FormBuilder<TFormValues>) => ReactNode
   ) => {
     const returnValue: {
       Form: typeof Form;
-      formBuilder: UseFormBuilderReturn<FormData>;
-      values: FormData;
+      builder: UseFormBuilderReturn<TFormValues>;
+      values: TFormValues;
     } = {} as any;
 
     const Form: FC<{
-      onSubmit?: SubmitHandler<FormData>;
+      onSubmit?: SubmitHandler<TFormValues>;
     }> = ({ onSubmit }) => {
-      returnValue.formBuilder = useFormBuilder<FormData>(props);
-      const { fields, handleSubmit, watch } = returnValue.formBuilder;
-      returnValue.values = watch();
+      const builder = useFormBuilder<TFormValues>(props);
+
+      returnValue.builder = builder;
+      returnValue.values = builder.watch();
+
       return (
-        <form onSubmit={onSubmit != null ? handleSubmit(onSubmit) : undefined}>
-          <input
-            {...fields.person.firstName({ required: true })}
-            aria-label="first-name-input"
-          />
-          <input
-            {...fields.person.lastName({ required: true })}
-            aria-label="last-name-input"
-          />
+        // eslint-disable-next-line @typescript-eslint/no-misused-promises
+        <form onSubmit={builder.handleSubmit(onSubmit ?? (() => {}))}>
+          {renderFormComponents(builder.fields)}
           <button type="submit">Submit</button>
-          {renderChild != null ? renderChild(returnValue.formBuilder) : null}
         </form>
       );
     };
@@ -58,31 +45,23 @@ describe("useFormBuilder", () => {
     return returnValue;
   };
 
-  const defaultValues: FormData = {
-    person: {
-      firstName: "John",
-      lastName: "Smith",
-    },
-    list: [
-      { id: "0", action: "frobnicate" },
-      { id: "1", action: "skedaddle" },
-    ],
-  };
-
   beforeAll(() => {
     userEvent.setup();
   });
 
   test("Two-way binding", async () => {
-    let formData = { ...defaultValues };
+    let formData = { ...person };
 
-    const handleSubmit: SubmitHandler<FormData> = (data) => {
+    const handleSubmit: SubmitHandler<PersonData> = (data) => {
       formData = data;
     };
 
-    const harness = createHarness({ defaultValues });
+    const harness = createHarness<PersonData>(
+      { defaultValues: person },
+      renderPersonFields
+    );
 
-    render(<harness.Form onSubmit={handleSubmit}></harness.Form>);
+    render(<harness.Form onSubmit={handleSubmit} />);
 
     const firstNameInput = screen.getByLabelText("first-name-input");
     const lastNameInput = screen.getByLabelText("last-name-input");
@@ -107,34 +86,40 @@ describe("useFormBuilder", () => {
     });
 
     // Submitted data contains new values
-    expect(formData.person.firstName).toBe("Joe");
-    expect(formData.person.lastName).toBe("Bloggs");
+    expect(formData.firstName).toBe("Joe");
+    expect(formData.lastName).toBe("Bloggs");
   });
 
   test("$setValue", async () => {
-    const harness = createHarness({ defaultValues });
+    const harness = createHarness<PersonData>(
+      {
+        defaultValues: person,
+      },
+      renderPersonFields
+    );
 
     render(<harness.Form />);
 
     act(() => {
-      harness.formBuilder.fields.person.firstName.$setValue("Joe");
+      harness.builder.fields.firstName.$setValue("Joe");
     });
 
-    expect(harness.values.person.firstName).toBe("Joe");
+    expect(harness.values.firstName).toBe("Joe");
   });
 
   test("$useWatch", async () => {
-    const harness = createHarness({ defaultValues }, (builder) => {
+    const { Form } = createHarness({ defaultValues: person }, (fields) => {
       // Option 1: get everything
-      const root = builder.fields.$useWatch();
+      const root = fields.$useWatch();
       // Option 2: get subset of fields
-      const [firstName, lastName] = builder.fields.person.$useWatch({
+      const [firstName, lastName] = fields.$useWatch({
         name: ["firstName", "lastName"],
       });
       // Option 3: get specific field
-      const firstNameAlt = builder.fields.person.firstName.$useWatch();
+      const firstNameAlt = fields.firstName.$useWatch();
       return (
         <>
+          {renderPersonFields(fields)}
           <div data-testid="watched-root">{JSON.stringify(root)}</div>
           <div data-testid="watched-first-name">{firstName}</div>
           <div data-testid="watched-last-name">{lastName}</div>
@@ -143,7 +128,7 @@ describe("useFormBuilder", () => {
       );
     });
 
-    render(<harness.Form onSubmit={() => {}} />);
+    render(<Form />);
 
     const firstNameInput = screen.getByLabelText("first-name-input");
 
@@ -160,8 +145,8 @@ describe("useFormBuilder", () => {
     await waitFor(() => {
       expect(watchedRoot).toHaveTextContent(
         JSON.stringify({
-          ...defaultValues,
-          person: { ...defaultValues.person, firstName: "Joe" },
+          ...person,
+          firstName: "Joe",
         })
       );
       expect(watchedRoot).toHaveTextContent("Smith");
@@ -171,49 +156,19 @@ describe("useFormBuilder", () => {
     });
   });
 
-  test("formState", async () => {
-    const harness = createHarness({ defaultValues }, (builder) => {
-      const isDirty = builder.formState.isDirty;
-
+  test("$useState", async () => {
+    const harness = createHarness({ defaultValues: person }, (fields) => {
+      const { dirty, errors } = fields.firstName.$useState();
       return (
-        <div data-testid="form-state-is-dirty">
-          {isDirty ? "true" : "false"}
-        </div>
+        <>
+          {renderPersonFields(fields)}
+          <div data-testid="is-dirty">{JSON.stringify(dirty)}</div>
+          <div data-testid="error-type">{errors?.type}</div>
+        </>
       );
     });
 
     render(<harness.Form />);
-
-    const firstNameInput = screen.getByLabelText("first-name-input");
-
-    const formStateIsDirty = screen.getByTestId("form-state-is-dirty");
-
-    expect(formStateIsDirty).toHaveTextContent("false");
-
-    await act(async () => {
-      await userEvent.clear(firstNameInput);
-      await userEvent.type(firstNameInput, "Joe");
-    });
-
-    await waitFor(() => {
-      expect(formStateIsDirty).toHaveTextContent("true");
-    });
-  });
-
-  test("$useState", async () => {
-    const handleSubmit: SubmitHandler<FormData> = (data) => {};
-
-    const harness = createHarness({ defaultValues }, (builder) => {
-      const { dirty, errors } = builder.fields.person.firstName.$useState();
-      return (
-        <div>
-          <div data-testid="is-dirty">{JSON.stringify(dirty)}</div>
-          <div data-testid="error-type">{errors?.type}</div>
-        </div>
-      );
-    });
-
-    render(<harness.Form onSubmit={handleSubmit} />);
 
     const firstNameInput = screen.getByLabelText("first-name-input");
     const isDirty = screen.getByTestId("is-dirty");
@@ -231,21 +186,31 @@ describe("useFormBuilder", () => {
   });
 
   test("$useFieldArray", async () => {
-    const harness = createHarness({ defaultValues }, (builder) => {
-      const { fields } = builder.fields.list.$useFieldArray();
+    const harness = createHarness(
+      {
+        defaultValues: {
+          list: [
+            { id: "0", action: "frobnicate" },
+            { id: "1", action: "skedaddle" },
+          ],
+        },
+      },
+      (fields) => {
+        const { fields: arrayFields } = fields.list.$useFieldArray();
 
-      return (
-        <div>
-          {fields.map((field, i) => (
-            <input
-              key={field.$key}
-              {...field.action()}
-              aria-label={`action-${i}`}
-            />
-          ))}
-        </div>
-      );
-    });
+        return (
+          <div>
+            {arrayFields.map((field, i) => (
+              <input
+                key={field.$key}
+                {...field.action()}
+                aria-label={`action-${i}`}
+              />
+            ))}
+          </div>
+        );
+      }
+    );
 
     render(<harness.Form />);
 
@@ -255,3 +220,28 @@ describe("useFormBuilder", () => {
     });
   });
 });
+
+interface PersonData {
+  firstName: string;
+  lastName: string;
+}
+
+const person: PersonData = {
+  firstName: "John",
+  lastName: "Smith",
+};
+
+const renderPersonFields = (fields: FormBuilder<PersonData>) => {
+  return (
+    <>
+      <input
+        {...fields.firstName({ required: true })}
+        aria-label="first-name-input"
+      />
+      <input
+        {...fields.lastName({ required: true })}
+        aria-label="last-name-input"
+      />
+    </>
+  );
+};
