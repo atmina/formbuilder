@@ -132,10 +132,5 @@ describe("Types", () => {
     expectTypeOf<FormBuilder<"one" | "two">>().toMatchTypeOf<
       FormBuilder<string>
     >();
-
-    // Ignored prefixes
-    expectTypeOf<FormBuilder<{ foo: string }>>().toMatchTypeOf<
-      FormBuilder<{ foo: string; __exists?: boolean }>
-    >();
   });
 });
