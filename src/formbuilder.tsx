@@ -70,12 +70,11 @@ export type FormBuilder<T> = FormBuilderRegisterFn<T> & {
     options: Parameters<UseFormSetError<FieldValues>>[2]
   ): void;
   $setFocus(options: SetFocusOptions): void;
-  $discriminate<TKey extends keyof T, TValue extends T[TKey]>(
-    key: TKey,
-    value: TValue
-  ): IsUnknown<T> extends 1
-    ? FormBuilder<unknown>
-    : FormBuilder<Extract<T, Record<TKey, TValue>>>;
+  $discriminate<TKey extends MappableKeys<U>, U = T>(
+    k: TKey
+  ): {
+    [K in MappableValues<U, TKey>]: [K, FormBuilder<Discriminate<U, TKey, K>>];
+  }[MappableValues<U, TKey>];
 } & (T extends Primitive
     ? // Leaf node
       unknown
@@ -232,7 +231,15 @@ export function createFormBuilder<TFieldValues extends FieldValues>(
             };
             break;
           case "$discriminate":
-            useCached = () => receiver;
+            useCached = (fieldName: string) => [
+              methods.watch(
+                prependCurrentPath(
+                  currentPath,
+                  fieldName
+                ) as FieldPath<TFieldValues>
+              ),
+              receiver,
+            ];
             break;
           default:
             // Recurse
@@ -351,12 +358,19 @@ interface $UseFieldArrayProps<T> {
   shouldUnregister?: boolean;
 }
 
-type $UseFieldArrayReturn<T> = Omit<UseFieldArrayReturn<
-  { __: T[] },
-  T extends Primitive | BrowserNativeObject ? never : "__"
->, "fields"> & {
-  fields: (FormBuilder<T> & {$key: string})[];
+type $UseFieldArrayReturn<T> = Omit<
+  UseFieldArrayReturn<
+    { __: T[] },
+    T extends Primitive | BrowserNativeObject ? never : "__"
+  >,
+  "fields"
+> & {
+  fields: (FormBuilder<T> & { $key: string })[];
 };
+
+type Discriminate<T, TKey extends keyof T, TValue> = IsUnknown<T> extends 1
+  ? unknown
+  : Extract<T, Record<TKey, TValue>>;
 
 export type UseFormBuilderProps<
   TFieldValues extends FieldValues = FieldValues,
@@ -364,3 +378,14 @@ export type UseFormBuilderProps<
 > = UseFormProps<TFieldValues, TContext>;
 
 type IsUnknown<T> = unknown extends T ? (T extends unknown ? 1 : 0) : 0;
+
+// Given object T, return all possible keys of T whose corresponding value type is a PropertyKey
+// (string, number or symbol).
+type MappableKeys<T> = {
+  [K in keyof T]: T[K] extends PropertyKey ? K : never;
+}[keyof T];
+
+// Given object T and a key TKey of T, return all possible values in T[TKey] which are PropertyKeys.
+type MappableValues<T, TKey extends keyof T> = T[TKey] extends PropertyKey
+  ? T[TKey]
+  : never;
