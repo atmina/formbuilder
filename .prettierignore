@@ -1,0 +1,25 @@
+node_modules
+build
+dist
+storybook-static
+.next
+.turbo
+.yarn
+
+package.json
+
+# Lockfiles
+package-lock.json
+pnpm-lock.yaml
+yarn.lock
+
+# Generated files
+generated
+__generated__
+*.generated*
+
+# IDE
+.idea
+.vscode
+
+.DS_Store

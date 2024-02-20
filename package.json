@@ -13,11 +13,11 @@
   "scripts": {
     "build": "rimraf lib && microbundle --jsx React.createElement src/index.ts",
     "prepublishOnly": "npm test && npm run build",
-    "lint": "yarn lint:eslint:fix && yarn prettier:fix",
-    "lint:eslint": "eslint .",
-    "lint:eslint:fix": "eslint . --fix",
-    "prettier:check": "prettier --check \"src/**/*.{tsx,graphql,ts,js,css}\"",
-    "prettier:fix": "prettier --write \"src/**/*.{tsx,graphql,ts,js,css}\"",
+    "lint": "yarn run lint:fix && yarn run prettier:fix",
+    "lint:check": "eslint . --report-unused-disable-directives --max-warnings 0",
+    "lint:fix": "eslint . --fix --report-unused-disable-directives --max-warnings 0",
+    "prettier:check": "prettier . --check",
+    "prettier:fix": "prettier . --write",
     "test": "jest src"
   },
   "repository": {
@@ -38,26 +38,21 @@
   },
   "homepage": "https://github.com/atmina/formbuilder#readme",
   "devDependencies": {
+    "@atmina/linting": "^2.1.2",
     "@testing-library/jest-dom": "^5.16.4",
     "@testing-library/react": "^13.2.0",
     "@testing-library/user-event": "^14.1.1",
+    "@types/eslint": "^8.56.2",
     "@types/jest": "^27.5.0",
-    "@types/react": "^18.0.8",
+    "@types/react": "^18.1.0",
     "@typescript-eslint/eslint-plugin": "^5.26.0",
     "@typescript-eslint/parser": "^5.26.0",
-    "eslint": "^8.16.0",
-    "eslint-config-prettier": "^8.5.0",
-    "eslint-config-standard-with-typescript": "^21.0.1",
-    "eslint-plugin-import": "^2.26.0",
-    "eslint-plugin-node": "^11.1.0",
-    "eslint-plugin-prettier": "^4.0.0",
-    "eslint-plugin-promise": "^6.0.0",
-    "eslint-plugin-react": "^7.30.0",
+    "eslint": "^8.56.0",
     "expect-type": "^0.13.0",
     "jest": "^28.0.3",
     "jest-environment-jsdom": "^28.0.2",
     "microbundle": "^0.15.0",
-    "prettier": "^2.7.1",
+    "prettier": "^3.2.5",
     "react": "^18.1.0",
     "react-dom": "^18.1.0",
     "react-hook-form": "^7.33.0",
@@ -74,5 +69,6 @@
       "optional": true
     }
   },
-  "packageManager": "yarn@1.22.21+sha256.dbed5b7e10c552ba0e1a545c948d5473bc6c5a28ce22a8fd27e493e3e5eb6370"
+  "packageManager": "yarn@1.22.21+sha256.dbed5b7e10c552ba0e1a545c948d5473bc6c5a28ce22a8fd27e493e3e5eb6370",
+  "prettier": "@atmina/linting/prettier"
 }

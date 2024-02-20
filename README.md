@@ -16,12 +16,12 @@ yarn add @atmina/formbuilder
 `FormBuilder` exposes a single hook `useFormBuilder` which is mostly compatible with `useForm` from `react-hook-form`.
 It contains an additional member, `fields`, which represents an alternative, object-oriented API on top of React Hook
 Form. Each field in the form data can be accessed as a property, including nested fields. The field can be called as a
-function to [register](https://react-hook-form.com/api/useform/register/) an input. It also exposes RHF functions via 
+function to [register](https://react-hook-form.com/api/useform/register/) an input. It also exposes RHF functions via
 field-level methods, e.g. `$setValue`. These methods are prefixed with `$` to prevent potential conflicts with form
 data members.
 
 ```tsx
-import { useFormBuilder } from '@atmina/formbuilder';
+import {useFormBuilder} from '@atmina/formbuilder';
 
 interface Address {
     state: string;
@@ -31,12 +31,15 @@ interface Address {
 }
 
 const App = () => {
-    const {fields, handleSubmit} = useFormBuilder<{name: string, address: Address}>();
-    
+    const {fields, handleSubmit} = useFormBuilder<{
+        name: string;
+        address: Address;
+    }>();
+
     const handleFormSubmit = handleSubmit((data) => {
-       console.log(data);
+        console.log(data);
     });
-    
+
     return (
         <form onSubmit={handleFormSubmit}>
             <input {...fields.name()} />
@@ -44,30 +47,35 @@ const App = () => {
             {/* etc. */}
         </form>
     );
-    
-    
-}
+};
 ```
 
 ## Fields
 
-You can create components that encapsulate a single (typed) field by accepting a `FormBuilder<T>` prop  where `T` is
+You can create components that encapsulate a single (typed) field by accepting a `FormBuilder<T>` prop where `T` is
 the type of the field. We like to call this `on` or `field`, but you are free to name it however you like.
 
 ```tsx
-import { FC } from "react";
+import {FC} from 'react';
 
-const TextField: FC<{on: FormBuilder<string>, label: string}> = ({on: field}) => {
-    return <div>
-        <label>
-            <span>{label}</span>
-            <input type="text" {...field()} />
-        </label>
-        <button type="button" onClick={() => field.$setValue(getRandomName())}>
-          Randomize
-        </button>
-    </div>
-}
+const TextField: FC<{on: FormBuilder<string>; label: string}> = ({
+    on: field,
+}) => {
+    return (
+        <div>
+            <label>
+                <span>{label}</span>
+                <input type='text' {...field()} />
+            </label>
+            <button
+                type='button'
+                onClick={() => field.$setValue(getRandomName())}
+            >
+                Randomize
+            </button>
+        </div>
+    );
+};
 ```
 
 The field component would be used like this:
@@ -86,15 +94,17 @@ You can create components which encapsulate a group of related fields, such as a
 composition, letting you piece together complex data structures and adding a lot of reusability to your forms.
 
 ```tsx
-import { FC } from "react";
+import {FC} from 'react';
 
 const AddressSubform: FC<{field: FormBuilder<Address>}> = ({field}) => {
-    return <div>
-        <TextField label="State" field={field.state} />
-        <TextField label="City" field={field.city} />
-        {/* etc. */}
-    </div>
-}
+    return (
+        <div>
+            <TextField label='State' field={field.state} />
+            <TextField label='City' field={field.city} />
+            {/* etc. */}
+        </div>
+    );
+};
 ```
 
 ## Field arrays
@@ -133,21 +143,22 @@ In case of a form that contains fields with object unions, the `$discriminate()`
 using a specific member like this:
 
 ```tsx
-import { FC } from 'react';
+import {FC} from 'react';
 
-type DiscriminatedForm = 
-    | { __typename: 'foo'; foo: string; }
-    | { __typename: 'bar'; bar: number; }
+type DiscriminatedForm =
+    | {__typename: 'foo'; foo: string}
+    | {__typename: 'bar'; bar: number};
 
-const DiscriminatedSubform: FC<{field: FormBuilder<DiscriminatedForm>}> = ({field}) => {
+const DiscriminatedSubform: FC<{field: FormBuilder<DiscriminatedForm>}> = ({
+    field,
+}) => {
     const fooForm = field.$discriminate('__typename', 'foo');
-    
+
     return <input {...fooForm.foo()} />;
 };
 ```
 
-> [!IMPORTANT]
-> `$discriminate` currently does **not** perform any runtime checks, it's strictly used for type narrowing at this time.
+> [!IMPORTANT] > `$discriminate` currently does **not** perform any runtime checks, it's strictly used for type narrowing at this time.
 
 ## Compatibility with `useForm`
 
@@ -155,7 +166,6 @@ Currently, `useFormBuilder` is almost compatible with `useForm`. This means you 
 `useForm`, in addition to the `fields` API. This provides an escape hatch for use cases not yet covered by
 `useFormBuilder`. However, future versions of the library may see us diverging further from `useForm` in an effort to
 streamline this API and increase its type-safety.
-
 
 ## License
 
