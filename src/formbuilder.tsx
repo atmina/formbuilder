@@ -142,7 +142,7 @@ export function createFormBuilder<TFieldValues extends FieldValues>(
   methods: UseFormReturn<TFieldValues>,
   path: string[],
   // Set if created in $useFieldArray()
-  key?: string,
+  key?: string
 ): FormBuilder<TFieldValues> {
   const currentPath = path.join(".") as FieldPath<TFieldValues>;
   // Cache generated functions to stabilize references across re-renders.
@@ -179,12 +179,12 @@ export function createFormBuilder<TFieldValues extends FieldValues>(
                 ...props,
               });
               return {
-                fields: fields.map(
-                  ({ $key }, i) => createFormBuilder(methods, [...path, i.toString()], $key)
+                fields: fields.map(({ $key }, i) =>
+                  createFormBuilder(methods, [...path, i.toString()], $key)
                 ),
-                ...rest
+                ...rest,
               };
-            }
+            };
             break;
           case "$useController":
             useCached = (
