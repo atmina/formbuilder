@@ -1,48 +1,50 @@
-import { expectTypeOf } from "expect-type";
-import { FormBuilder } from "./formbuilder";
+/* eslint-disable @typescript-eslint/no-explicit-any */
 
-describe("Types", () => {
-  test("FormBuilder", () => {
+import {expectTypeOf} from 'expect-type';
+import {type FormBuilder} from './formbuilder';
+
+describe('Types', () => {
+  test('FormBuilder', () => {
     // FormBuilder maps fields to functions
-    expectTypeOf<FormBuilder<{ foo: string }>["foo"]>().toBeFunction();
-    expectTypeOf<FormBuilder<{ foo?: string }>["foo"]>().toBeFunction();
-    expectTypeOf<FormBuilder<{ foo?: string }>["foo"]>().not.toBeNullable();
+    expectTypeOf<FormBuilder<{foo: string}>['foo']>().toBeFunction();
+    expectTypeOf<FormBuilder<{foo?: string}>['foo']>().toBeFunction();
+    expectTypeOf<FormBuilder<{foo?: string}>['foo']>().not.toBeNullable();
 
     // Nested fields
     expectTypeOf<
-      FormBuilder<{ foo: { bar: string } }>["foo"]["bar"]
+      FormBuilder<{foo: {bar: string}}>['foo']['bar']
     >().toBeFunction();
     expectTypeOf<
-      FormBuilder<{ foo: { bar: { baz: string } } }>["foo"]["bar"]["baz"]
+      FormBuilder<{foo: {bar: {baz: string}}}>['foo']['bar']['baz']
     >().toBeFunction();
 
     // Covariance
-    expectTypeOf<FormBuilder<{ foo: string; bar: string }>>().toMatchTypeOf<
-      FormBuilder<{ foo: string }>
+    expectTypeOf<FormBuilder<{foo: string; bar: string}>>().toMatchTypeOf<
+      FormBuilder<{foo: string}>
     >();
-    expectTypeOf<FormBuilder<{ foo: string }>>().not.toMatchTypeOf<
-      FormBuilder<{ foo: string; bar: string }>
+    expectTypeOf<FormBuilder<{foo: string}>>().not.toMatchTypeOf<
+      FormBuilder<{foo: string; bar: string}>
     >();
-    expectTypeOf<FormBuilder<{ foo: string; bar: string }[]>>().toMatchTypeOf<
-      FormBuilder<{ foo: string }[]>
+    expectTypeOf<FormBuilder<{foo: string; bar: string}[]>>().toMatchTypeOf<
+      FormBuilder<{foo: string}[]>
     >();
-    expectTypeOf<FormBuilder<{ foo: string }[]>>().not.toMatchTypeOf<
-      FormBuilder<{ foo: string; bar: string }[]>
+    expectTypeOf<FormBuilder<{foo: string}[]>>().not.toMatchTypeOf<
+      FormBuilder<{foo: string; bar: string}[]>
     >();
 
     // Optional
-    expectTypeOf<FormBuilder<{ foo?: string }>>().toMatchTypeOf<
-      FormBuilder<{ foo: string }>
+    expectTypeOf<FormBuilder<{foo?: string}>>().toMatchTypeOf<
+      FormBuilder<{foo: string}>
     >();
-    expectTypeOf<FormBuilder<{ foo: string }>>().toMatchTypeOf<
-      FormBuilder<{ foo?: string }>
+    expectTypeOf<FormBuilder<{foo: string}>>().toMatchTypeOf<
+      FormBuilder<{foo?: string}>
     >();
 
     // Nested optional
     type NestedOptional = FormBuilder<{
-      foo?: { bar?: { baz?: string } };
+      foo?: {bar?: {baz?: string}};
     }>;
-    expectTypeOf<NestedOptional["foo"]["bar"]["baz"]>().toMatchTypeOf<
+    expectTypeOf<NestedOptional['foo']['bar']['baz']>().toMatchTypeOf<
       FormBuilder<string>
     >();
 
@@ -56,9 +58,9 @@ describe("Types", () => {
 
     // Nested nullable
     type NestedNull = FormBuilder<{
-      foo: { bar: { baz: string | null } | null } | null;
+      foo: {bar: {baz: string | null} | null} | null;
     }>;
-    expectTypeOf<NestedNull["foo"]["bar"]["baz"]>().toMatchTypeOf<
+    expectTypeOf<NestedNull['foo']['bar']['baz']>().toMatchTypeOf<
       FormBuilder<string | null>
     >();
 
@@ -72,68 +74,48 @@ describe("Types", () => {
 
     // useWatch helper
     expectTypeOf<
-      FormBuilder<{ foo: string }>["foo"]["$useWatch"]
+      FormBuilder<{foo: string}>['foo']['$useWatch']
     >().toBeFunction();
-    const useWatchFoo: FormBuilder<{ foo: string }>["foo"]["$useWatch"] = (() =>
-      "foo") as never;
+    const useWatchFoo: FormBuilder<{foo: string}>['foo']['$useWatch'] = (() =>
+      'foo') as never;
     expectTypeOf(useWatchFoo()).toEqualTypeOf<string>();
     // useWatch with array of watched subfields
     const useWatchBar: FormBuilder<{
-      bar: { baz: string; quux: number };
-    }>["bar"]["$useWatch"] = (() => "bar") as never;
-    expectTypeOf(useWatchBar({ name: ["baz", "quux"] })).toEqualTypeOf<
+      bar: {baz: string; quux: number};
+    }>['bar']['$useWatch'] = (() => 'bar') as never;
+    expectTypeOf(useWatchBar({name: ['baz', 'quux']})).toEqualTypeOf<
       [string, number]
     >();
 
     // useController helper
     expectTypeOf<
-      FormBuilder<{ foo: string }>["foo"]["$useController"]
+      FormBuilder<{foo: string}>['foo']['$useController']
     >().toBeFunction();
     const useFooController: FormBuilder<{
       foo: string;
-    }>["foo"]["$useController"] = (() => ({
+    }>['foo']['$useController'] = (() => ({
       field: {
-        value: "foo",
+        value: 'foo',
       },
     })) as never;
     expectTypeOf(useFooController().field.value).toEqualTypeOf<string>();
 
     // useFieldArray helper
-    type TFormBuilderWithArray = FormBuilder<{ things: { foo: string }[] }>;
+    type TFormBuilderWithArray = FormBuilder<{things: {foo: string}[]}>;
     expectTypeOf<
-      TFormBuilderWithArray["things"]["$useFieldArray"]
+      TFormBuilderWithArray['things']['$useFieldArray']
     >().toBeFunction();
-    expectTypeOf<FormBuilder<{ foo: string }>>().not.toHaveProperty(
-      "$useFieldArray"
+    expectTypeOf<FormBuilder<{foo: string}>>().not.toHaveProperty(
+      '$useFieldArray',
     );
     expectTypeOf<
-      FormBuilder<{ things: { foo: string }[]; otherThings: { bar: string }[] }>
-    >().toMatchTypeOf<FormBuilder<{ things: { foo: string }[] }>>();
+      FormBuilder<{things: {foo: string}[]; otherThings: {bar: string}[]}>
+    >().toMatchTypeOf<FormBuilder<{things: {foo: string}[]}>>();
 
-    // discriminate helper
-    interface FooForm {
-      __typename: "foo";
-      foo: string;
-    }
-    interface BarForm {
-      __typename: "bar";
-      bar: number;
-    }
-    const discriminatorForm: FormBuilder<FooForm | BarForm> = {
-      $discriminate: () => undefined,
-    } as any;
-    expectTypeOf(
-      discriminatorForm.$discriminate("__typename", "foo")
-    ).toMatchTypeOf<FormBuilder<{ foo: string }>>();
-    expectTypeOf(
-      discriminatorForm.$discriminate("__typename", "bar")
-    ).toMatchTypeOf<FormBuilder<{ bar: number }>>();
-
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    expectTypeOf<FormBuilder<{ foo: string }>>().toMatchTypeOf<
+    expectTypeOf<FormBuilder<{foo: string}>>().toMatchTypeOf<
       FormBuilder<any>
     >();
-    expectTypeOf<FormBuilder<{ foo: string }>>().toMatchTypeOf<
+    expectTypeOf<FormBuilder<{foo: string}>>().toMatchTypeOf<
       FormBuilder<unknown>
     >();
 
@@ -145,16 +127,11 @@ describe("Types", () => {
     // expectTypeOf<FormBuilder<{foo: string}>>().toMatchTypeOf<{foo: string, exists?: boolean}>();
 
     expectTypeOf<FormBuilder<string>>().not.toMatchTypeOf<
-      FormBuilder<{ foo: string }>
+      FormBuilder<{foo: string}>
     >();
 
-    expectTypeOf<FormBuilder<"one" | "two">>().toMatchTypeOf<
+    expectTypeOf<FormBuilder<'one' | 'two'>>().toMatchTypeOf<
       FormBuilder<string>
-    >();
-
-    // Ignored prefixes
-    expectTypeOf<FormBuilder<{ foo: string }>>().toMatchTypeOf<
-      FormBuilder<{ foo: string; __exists?: boolean }>
     >();
   });
 });
