@@ -358,7 +358,7 @@ type $UseFieldArrayProps<T> = {
   shouldUnregister?: boolean;
 };
 
-type $UseFieldArrayReturn<T> = Omit<
+export type $UseFieldArrayReturn<T> = Omit<
   UseFieldArrayReturn<
     {__: T[]},
     T extends Primitive | BrowserNativeObject ? never : '__'
