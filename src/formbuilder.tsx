@@ -177,7 +177,7 @@ export function createFormBuilder<TFieldValues extends FieldValues>(
                 name: currentPath as FieldArrayPath<TFieldValues>,
                 keyName: '$key' as const,
                 control,
-                ...props,
+                ...(props as Record<string, unknown>),
               });
               return {
                 fields: fields.map(({$key}, i) =>
@@ -354,7 +354,10 @@ type $UseWatchCommonProps = Omit<
 type $UseStateProps = Omit<UseFormStateProps<never>, 'name' | 'control'>;
 
 type $UseFieldArrayProps<T> = {
-  rules?: Pick<RegisterOptions<T>, 'maxLength' | 'minLength' | 'required'>;
+  rules?: Pick<
+    RegisterOptions<T>,
+    'maxLength' | 'minLength' | 'required' | 'validate'
+  >;
   shouldUnregister?: boolean;
 };
 
