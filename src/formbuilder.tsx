@@ -32,6 +32,7 @@ import {
   useFormState,
   useForm,
   useWatch,
+  type SetValueConfig,
 } from 'react-hook-form';
 
 /**
@@ -67,7 +68,7 @@ export type FormBuilder<T> = FormBuilderRegisterFn<T> & {
         dirty: Partial<Readonly<FieldNamesMarkedBoolean<U>>>;
       }
     : {errors: GlobalError; dirty: boolean};
-  $setValue(value: T): void;
+  $setValue(value: T, options?: SetValueConfig): void;
   $setError(
     error: ErrorOption,
     options: Parameters<UseFormSetError<FieldValues>>[2],
@@ -221,8 +222,8 @@ export function createFormBuilder<TFieldValues extends FieldValues>(
             break;
           case '$setValue':
             // TODO: hide from root (should use reset for that)
-            useCached = (value) => {
-              methods.setValue(currentPath, value);
+            useCached = (value, options: any) => {
+              methods.setValue(currentPath, value, options);
             };
             break;
           // TODO: $getValue -> RHF getValues

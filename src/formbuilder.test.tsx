@@ -103,10 +103,11 @@ describe('useFormBuilder', () => {
     render(<harness.Form />);
 
     act(() => {
-      harness.builder.fields.firstName.$setValue('Joe');
+      harness.builder.fields.firstName.$setValue('Joe', {shouldDirty: true});
     });
 
     expect(harness.values.firstName).toBe('Joe');
+    expect(harness.builder.formState.dirtyFields.firstName).toBe(true);
   });
 
   test('$useWatch', async () => {
