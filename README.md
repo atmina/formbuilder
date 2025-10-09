@@ -155,9 +155,9 @@ const DiscriminatedSubform: FC<{field: FormBuilder<DiscriminatedForm>}> = ({
     const [typename, narrowed] = field.$discriminate('__typename');
 
     switch (typename) {
-      case 'foo':
-        return <input {...narrowed.foo()} />;
-      case 'bar':
+        case 'foo':
+            return <input {...narrowed.foo()} />;
+        case 'bar':
         // ...
     }
 };
